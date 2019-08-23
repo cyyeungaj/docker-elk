@@ -1,7 +1,19 @@
 version: '2'
 
 services:
-
+  filebeat:
+    hostname: filebeat
+    build: 
+      context: fileBeat/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      # needed to access all docker logs (read only) :
+      - ./logs:/usr/share/filebeat/dockerlogs:ro
+    links:
+      - logstash
+    networks:
+      - elk
   elasticsearch:
     build:
       context: elasticsearch/
@@ -26,6 +38,7 @@ services:
     volumes:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logstash/output-files:/usr/share/logstash/output-files
     ports:
       - "5000:5000"
       - "9600:9600"
@@ -36,19 +49,19 @@ services:
     depends_on:
       - elasticsearch
 
-  kibana:
-    build:
-      context: kibana/
-      args:
-        ELK_VERSION: $ELK_VERSION
-    volumes:
-      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
-    ports:
-      - "5601:5601"
-    networks:
-      - elk
-    depends_on:
-      - elasticsearch
+  # kibana:
+  #   build:
+  #     context: kibana/
+  #     args:
+  #       ELK_VERSION: $ELK_VERSION
+  #   volumes:
+  #     - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+  #   ports:
+  #     - "5601:5601"
+  #   networks:
+  #     - elk
+  #   depends_on:
+  #     - elasticsearch
 
 networks:
 
